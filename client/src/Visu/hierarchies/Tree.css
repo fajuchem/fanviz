@@ -1,9 +1,15 @@
 .node circle {
-  fill: #fff;
+  ffill: #fff;
   stroke-width: 3px;
 }
 
-.node text { font: 12px sans-serif; }
+.node text {
+  font: 12px sans-serif;
+}
+
+.node .triangle {
+  ffill: blue;
+}
 
 .link {
   fill: none;

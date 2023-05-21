@@ -3,10 +3,18 @@ import * as d3 from "d3";
 import { useEffect } from "react";
 import "./Tree.css";
 
-export function Tree({ data, width: parentWidth, height: parentHeight }) {
+export function Tree({
+  data,
+  width: parentWidth,
+  height: parentHeight,
+  fanOut,
+}) {
   const margin = { top: 20, right: 160, bottom: 30, left: 110 },
     width = parentWidth - margin.left - margin.right,
     height = parentHeight - margin.top - margin.bottom;
+  const green = "#50a061";
+  const red = "#ff8d8f";
+  const blue = "#8ea2ff";
 
   useEffect(() => {
     // declares a tree layout and assigns the size
@@ -62,6 +70,12 @@ export function Tree({ data, width: parentWidth, height: parentHeight }) {
         );
       });
 
+    link
+      .enter()
+      .insert("path", "g")
+      .attr("class", "link")
+      .attr("marker-end", "url(#end)");
+
     // adds each node as a group
     const node = g
       .selectAll(".node")
@@ -76,7 +90,51 @@ export function Tree({ data, width: parentWidth, height: parentHeight }) {
       });
 
     // adds the circle to the node
-    node.append("circle").attr("r", 10);
+    // node.append("circle").attr("r", 10);
+    // node.append("rect").attr("width", 30).attr("height", 30);
+    // console.log(g.selectAll('.node rect').nodes());
+    node
+      .filter((d) => {
+        return d.data?.type === "Function";
+      })
+      .append("circle")
+      .attr("fill", (d) => {
+        return d.data?.children.length >= fanOut ? red : green;
+      })
+      .attr("r", 10);
+
+    node
+      .filter((d) => {
+        return d.data?.type === "Method";
+      })
+      .append("rect")
+      .attr("fill", green)
+      .attr("width", 25)
+      .attr("height", 25)
+      .attr("x", -12.5)
+      .attr("y", -12.5);
+
+    const triangle = d3.symbol().type(d3.symbolTriangle).size(250)();
+    node
+      .filter((d) => {
+        return d.data?.type === "File";
+      })
+      .append("path")
+      .attr("fill", green)
+      .attr("class", "triangle")
+      .attr("d", triangle);
+
+    // const rects = node.filter((d) => {
+    //   return d.data.children?.length === 0;
+    // });
+    // circles.append("circle").attr("r", 10);
+    // rects
+    //   .append("rect")
+    //   .attr("width", 30)
+    //   .attr("height", 30)
+    //   .attr("x", -15)
+    //   .attr("y", -15);
+    // node.append("circle").attr("r", 10);
 
     node.append("title").text((d) => d.data.name);
 
@@ -98,27 +156,25 @@ export function Tree({ data, width: parentWidth, height: parentHeight }) {
         return d.data.name;
       });
 
-    const circles = g.selectAll("circle").data(nodes.descendants()).nodes();
+    // const circles = g.selectAll("circle").data(nodes.descendants()).nodes();
 
-    for (const node of circles) {
-      if (node.__data__.depth === 0) {
-        d3.select(node).style("fill", "#8ea2ff");
-      } else if (node.__data__.depth === 1) {
-        d3.select(node).style("fill", "#ff8d8f");
-      } else {
-        d3.select(node).style("fill", "#50a061");
-      }
-    }
-  }, [data, parentHeight, parentWidth]);
+    // for (const node of circles) {
+    //   if (node.__data__.depth === 0) {
+    //     d3.select(node).style("fill", "#8ea2ff");
+    //   } else if (node.__data__.depth === 1) {
+    //     d3.select(node).style("fill", "#ff8d8f");
+    //   } else {
+    //     d3.select(node).style("fill", "#50a061");
+    //   }
+    // }
+  }, [data, parentHeight, parentWidth, fanOut]);
 
   return (
-    <div style={{ position: "fixed" }}>
-      <svg width={parentWidth} height={parentHeight}>
-        <g transform={`translate(${margin.left}, ${margin.top})`}>
-          <g className="links"></g>
-          <g className="nodes"></g>
-        </g>
-      </svg>
-    </div>
+    <svg width={parentWidth} height={parentHeight}>
+      <g transform={`translate(${margin.left}, ${margin.top})`}>
+        <g className="links"></g>
+        <g className="nodes"></g>
+      </g>
+    </svg>
   );
 }

@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./main.css";
 import App from "./App";
 
-const body = document.querySelector(".Layout");
+const body = document.querySelector(".Layout-sidebar");
 
 const app = document.createElement("div");
 
@@ -16,7 +16,9 @@ app.id = "root";
 // Also control when the content script is injected from the manifest.json:
 // https://developer.chrome.com/docs/extensions/mv3/content_scripts/#run_time
 if (body) {
-  body.prepend(app);
+  body.append(app);
+
+  body.style.width = "720px";
 }
 
 const container = document.getElementById("root");

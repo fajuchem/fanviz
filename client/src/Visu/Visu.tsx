@@ -13,6 +13,7 @@ enum VisuType {
 
 export function Visu() {
   const [selectedOption, setSelectedOption] = useState(VisuType.Tree);
+  const [fanOut, setFanOut] = useState(10);
   const width = 700;
   const height = 700;
   const [data, setData] = useState({});
@@ -25,12 +26,12 @@ export function Visu() {
         const selected = window.getSelection()?.toString();
 
         const dependecies = await axios.get(
-          `http://localhost:3000/dependecies?symbol=${selected}&file=${file}`
+          `http://localhost:3030/dependecies?symbol=${selected}&file=${file}`
         );
         setData(dependecies.data);
-        console.log(file);
-        console.log(selected);
-        console.log(dependecies.data);
+        // console.log(file);
+        // console.log(selected);
+        // console.log(dependecies.data);
       }
     };
 
@@ -47,7 +48,7 @@ export function Visu() {
 
   const Visu = () => {
     if (selectedOption === VisuType.Tree) {
-      return <Tree data={data} width={width} height={height} />;
+      return <Tree data={data} width={width} height={height} fanOut={fanOut} />;
     } else if (selectedOption === VisuType.Treemap) {
       return <Treemap data={data} width={width} height={height} />;
     } else if (selectedOption === VisuType.Pack) {
@@ -57,15 +58,19 @@ export function Visu() {
     }
   };
 
-  //<Tree data={data} />
   return (
     <>
       <div>
-        <select value={selectedOption} onChange={handleSelect}>
-          <option value={VisuType.Tree}>Tree</option>
-          <option value={VisuType.Treemap}>Treemap</option>
-          <option value={VisuType.Pack}>Pack</option>
-        </select>
+        <label htmlFor="fanOut">Fan Out</label>
+        <input
+          id="fanOut"
+          type="range"
+          min="1"
+          max="10"
+          value={fanOut}
+          onChange={(value) => setFanOut(Number(value.target.value))}
+        />
+        {fanOut}
       </div>
       <div>
         <Visu />
