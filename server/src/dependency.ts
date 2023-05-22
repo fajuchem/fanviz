@@ -17,9 +17,17 @@ function getFileReferences(referencedSymbols: ReferencedSymbol[]) {
   return [...new Set(result)];
 }
 
+enum DependencyType {
+  Class = "Class",
+  Function = "Function",
+  Method = "Method",
+  File = "File",
+}
+
 interface Node {
   name: string;
   value: number;
+  type: DependencyType;
   children: Node[];
 }
 
@@ -32,6 +40,7 @@ export function getMethodDependencies(
   const result: Node = {
     name: symbol,
     value: 100,
+    type: DependencyType.Method,
     children: [],
   };
 
@@ -56,7 +65,6 @@ export function getMethodDependencies(
 
               const className = classDeclaration?.getName();
               const methodName = method?.getName();
-              console.log(methodName);
               if (className && methodName && methodName !== symbol) {
                 const name = `${className}.${methodName}`;
                 const children = getMethodDependencies(
@@ -68,6 +76,7 @@ export function getMethodDependencies(
                 result.children.push({
                   name,
                   value: 100,
+                  type: DependencyType.Method,
                   children: children.children || [],
                 });
                 // console.log(methodName);
@@ -95,21 +104,17 @@ export function getDependencies(
   const result: Node = {
     name: symbol,
     value: 100,
+    type: DependencyType.Function,
     children: [],
   };
 
   for (const sourceFile of sourceFiles) {
-    //for (const statement of sourceFile.compilerNode.statements) {
-    //  console.log(statement.kind);
-    //}
-    //const c = sourceFile.getClass("LaboratorioServico");
     const c = sourceFile.getFunction(symbol);
 
     if (c) {
       const referencedSymbols = c.findReferences();
 
       for (const referencedSymbol of referencedSymbols) {
-        // console.log(referencedSymbol.getReferences().length);
         for (const reference of referencedSymbol.getReferences()) {
           const func = reference
             .getNode()
@@ -125,6 +130,7 @@ export function getDependencies(
               result.children.push({
                 name: identifier,
                 value: 100,
+                type: DependencyType.Function,
                 children: children.children || [],
               });
             }
@@ -137,6 +143,7 @@ export function getDependencies(
               result.children.push({
                 name: call.getSourceFile().getBaseName(),
                 value: 100,
+                type: DependencyType.File,
                 children: [],
               });
             }

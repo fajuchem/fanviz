@@ -4,7 +4,7 @@ import { Project } from "ts-morph";
 import { getDependencies, getMethodDependencies } from "./dependency";
 
 const app = express();
-const port = 3000;
+const port = 3030;
 
 app.use(cors());
 

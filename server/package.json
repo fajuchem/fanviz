@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "npx nodemon"
+    "dev": "npx nodemon"
   },
   "dependencies": {
     "@types/node": "^20.1.0",
