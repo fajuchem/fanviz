@@ -1,3 +1,4 @@
+import { on } from "events";
 import {
   FunctionDeclaration,
   Project,
@@ -29,6 +30,7 @@ interface Node {
   value: number;
   type: DependencyType;
   children: Node[];
+  parent?: any[];
 }
 
 export function getMethodDependencies(
@@ -108,7 +110,9 @@ export function getDependencies(
     children: [],
   };
 
-  for (const sourceFile of sourceFiles) {
+  const sourceFile = project.getSourceFile(file);
+
+  if (sourceFile) {
     const c = sourceFile.getFunction(symbol);
 
     if (c) {
@@ -154,4 +158,150 @@ export function getDependencies(
     }
   }
   return result;
+}
+
+function getCall(node: ts.Node) {
+  const result: ts.CallExpression[] = [];
+
+  function visit(node: ts.Node) {
+    if (ts.isCallExpression(node)) {
+      const expression = node.expression;
+
+      if (ts.isIdentifier(expression)) {
+        result.push(node);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(node);
+
+  return result;
+}
+
+export function getData(
+  pproject: Project,
+  psymbol: string,
+  pfileOriginal: string
+) {
+  const temp = {};
+  const alreadyMapped = {};
+
+  const inside = (project, symbol, fileOriginal) => {
+    const result: Node = {
+      name: psymbol,
+      value: 100,
+      type: DependencyType.Function,
+      children: [],
+    };
+    const base = `/home/fajuchem/dev/automatic-waffle/`;
+    const file = `/home/fajuchem/dev/automatic-waffle/${fileOriginal.replace(
+      base,
+      ""
+    )}`;
+
+    if (alreadyMapped[symbol]) {
+      return;
+    } else {
+      alreadyMapped[symbol] = true;
+    }
+
+    const sourceFile = project.getSourceFile(file);
+
+    for (let sourceFile of project.getSourceFiles()) {
+      // console.log(sourceFile);
+      const c = sourceFile.getFunction(symbol);
+
+      if (c) {
+        const referencedSymbols = c.findReferences();
+
+        for (const referencedSymbol of referencedSymbols) {
+          for (const reference of referencedSymbol.getReferences()) {
+            const func = reference
+              .getNode()
+              .getFirstAncestorByKind(SyntaxKind.FunctionDeclaration);
+
+            if (func) {
+              const identifier = func
+                ?.getFirstChildByKind(SyntaxKind.Identifier)
+                ?.getText();
+
+              if (identifier && identifier !== c.getName()) {
+                // console.log("-".repeat(20));
+                // console.log(identifier, c.getName());
+                // console.log("-".repeat(20));
+                //console.log(identifier);
+                //console.log("calls:", getCall(c.compilerNode));
+                //console.log("-".repeat(20));
+
+                const children = inside(
+                  project,
+                  identifier,
+                  func.getSourceFile().getFilePath()
+                );
+                result.children.push({
+                  name: identifier,
+                  value: 100,
+                  type: DependencyType.Function,
+                  children: children?.children || [],
+                });
+
+                temp[`${identifier}:${symbol}`] = {
+                  source: identifier,
+                  target: symbol,
+                };
+                const calls = getCall(c.compilerNode);
+
+                console.log("-".repeat(20));
+                calls.forEach((f) => {
+                  const target = f.expression.getText();
+                  const file = f.getSourceFile().fileName;
+                  console.log(target);
+                  console.log(inside(project, target, file));
+                  temp[`${symbol}:${target}`] = {
+                    source: symbol,
+                    target: target,
+                  };
+                });
+                console.log("-".repeat(20));
+              }
+            } else {
+              const call = reference
+                .getNode()
+                .getFirstAncestorByKind(SyntaxKind.CallExpression);
+
+              if (call) {
+                result.children.push({
+                  name: call.getSourceFile().getBaseName(),
+                  value: 100,
+                  type: DependencyType.File,
+                  children: [],
+                });
+                temp[`${call.getSourceFile().getBaseName()}:${symbol}`] = {
+                  source: call.getSourceFile().getBaseName(),
+                  target: symbol,
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+    return result;
+  };
+
+  inside(pproject, psymbol, pfileOriginal);
+
+  const fanIn = {};
+  const fanOut = {};
+
+  Object.keys(temp).forEach((key) => {
+    const f = temp[key];
+    fanIn[f.target] = (fanIn[f.target] || 0) + 1;
+    fanOut[f.source] = (fanOut[f.source] || 0) + 1;
+  });
+
+
+  return { graph: Object.values(temp), meta: { fanIn, fanOut, selected: psymbol } };
 }

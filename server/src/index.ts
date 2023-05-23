@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { Project } from "ts-morph";
-import { getDependencies, getMethodDependencies } from "./dependency";
+import { getData, getDependencies, getMethodDependencies } from "./dependency";
 
 const app = express();
 const port = 3030;
@@ -16,23 +16,31 @@ project.addSourceFilesAtPaths([
   `!${folderPath}/node_modules/**/*`,
 ]);
 
-getMethodDependencies(
+//getMethodDependencies(
+//  project,
+//  "criar",
+//  //"/home/fajuchem/dev/automatic-waffle/src/laboratorio/laboratorio.servico.ts"
+//  "src/laboratorio/laboratorio.servico.ts"
+//);
+const dependecies = getData(
   project,
-  "criar",
-  //"/home/fajuchem/dev/automatic-waffle/src/laboratorio/laboratorio.servico.ts"
-  "src/laboratorio/laboratorio.servico.ts"
+  "getActiveUsers",
+  "src/main.ts"
 );
+console.dir(dependecies, { depth: null });
 
 app.get("/dependecies", (req: Request, res: Response) => {
   const symbol = req.query.symbol as string;
   const file = req.query.file as string;
 
-  const dependecies = getDependencies(project, symbol, file);
-  console.log('deps', dependecies);
-  if (dependecies.children.length === 0) {
-    const methodDependencies = getMethodDependencies(project, symbol, file);
-    res.json(methodDependencies);
-  }
+  //const dependecies = getDependencies(project, symbol, file);
+  console.log(symbol, file);
+  const dependecies = getData(project, symbol, file);
+  console.log("deps", dependecies);
+  // if (dependecies.children.length === 0) {
+  //   const methodDependencies = getMethodDependencies(project, symbol, file);
+  //   res.json(methodDependencies);
+  // }
   res.json(dependecies);
 });
 

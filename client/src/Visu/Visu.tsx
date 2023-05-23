@@ -4,6 +4,7 @@ import { data } from "./hierarchies/data";
 import { Treemap } from "./hierarchies/Treemap";
 import axios from "axios";
 import { Pack } from "./hierarchies/Pack";
+import { Graph } from "./hierarchies/Graph";
 
 enum VisuType {
   Tree = "Tree",
@@ -14,9 +15,10 @@ enum VisuType {
 export function Visu() {
   const [selectedOption, setSelectedOption] = useState(VisuType.Tree);
   const [fanOut, setFanOut] = useState(10);
-  const width = 700;
-  const height = 700;
+  const [fanIn, setFanIn] = useState(10);
   const [data, setData] = useState({});
+  const width = 800;
+  const height = 800;
 
   useEffect(() => {
     const event = async (e) => {
@@ -27,15 +29,18 @@ export function Visu() {
 
         const dependecies = await axios.get(
           `http://localhost:3030/dependecies?symbol=${selected}&file=${file}`
+          //`http://localhost:3030/dependecies?symbol=getFromDb&file=src/user.ts`
         );
         setData(dependecies.data);
         // console.log(file);
         // console.log(selected);
-        // console.log(dependecies.data);
+        console.log(dependecies.data);
       }
     };
 
     document.addEventListener("mouseup", event);
+
+    event({ target: { closest: () => ({ getAttribute: () => "file" }) } });
 
     return () => {
       document.removeEventListener("mouseup", event);
@@ -60,20 +65,32 @@ export function Visu() {
 
   return (
     <>
+      <div style={{ marginTop: '20px' }}>
+        <label htmlFor="fanIn">Fan In</label>
+        <input
+          id="fanIn"
+          type="range"
+          min="0"
+          max="10"
+          value={fanIn}
+          onChange={(value) => setFanIn(Number(value.target.value))}
+        />
+        {fanIn}
+      </div>
       <div>
         <label htmlFor="fanOut">Fan Out</label>
         <input
           id="fanOut"
           type="range"
-          min="1"
+          min="0"
           max="10"
           value={fanOut}
           onChange={(value) => setFanOut(Number(value.target.value))}
         />
         {fanOut}
       </div>
-      <div>
-        <Visu />
+      <div style={{ marginTop: '20px' }}>
+        <Graph height={height} width={width} fanIn={fanIn} fanOut={fanOut} data={data} />
       </div>
     </>
   );

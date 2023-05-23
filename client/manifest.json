@@ -11,6 +11,7 @@
   "content_scripts": [
     {
       "matches": [
+        "https://blank.org/",
         "https://github.com/fajuchem/poc-codecov/pull/*/files",
         "https://github.com/fajuchem/automatic-waffle/pull/*/files"
       ],
