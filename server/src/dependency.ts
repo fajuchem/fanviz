@@ -302,6 +302,8 @@ export function getData(
     fanOut[f.source] = (fanOut[f.source] || 0) + 1;
   });
 
+  const graph = Object.values(temp);
+  const meta = { fanIn, fanOut, selected: psymbol };
 
-  return { graph: Object.values(temp), meta: { fanIn, fanOut, selected: psymbol } };
+  return { graph, meta };
 }

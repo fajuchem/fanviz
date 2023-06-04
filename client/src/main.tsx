@@ -19,7 +19,8 @@ app.id = "root";
 // Also control when the content script is injected from the manifest.json:
 // https://developer.chrome.com/docs/extensions/mv3/content_scripts/#run_time
 if (body) {
-  body.prepend(app);
+  //body.prepend(app);
+  body.append(app);
 
   body.style.width = "800px";
 }

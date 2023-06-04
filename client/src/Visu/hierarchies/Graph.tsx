@@ -153,7 +153,17 @@ export function Graph({ height, width, fanIn, fanOut, data: externalData }) {
       event.subject.fy = null;
       start = false;
     }
+
     node
+      .filter((d) => {
+        if (d.id.endsWith(".ts")) {
+          return false;
+        } else if (d.id.includes(".")) {
+          return false;
+        } else {
+          return true;
+        }
+      })
       .append("circle")
       .attr("stroke", (d) => {
         if (d.id === info?.selected) {
@@ -173,6 +183,49 @@ export function Graph({ height, width, fanIn, fanOut, data: externalData }) {
           return red;
         }
       });
+
+    node
+      .filter((d) => {
+        if (d.id.endsWith(".ts")) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+      .append("rect")
+      .attr("fill", green)
+      .attr("width", 25)
+      .attr("height", 25)
+      .attr("x", -12.5)
+      .attr("y", -12.5)
+      .attr("fill", (d) => {
+        console.log("-".repeat(100));
+        console.log(d.id);
+        console.log("-".repeat(100));
+        const infoFanIn = info.fanIn[d.id] || 0;
+        const infoFanOut = info.fanOut[d.id] || 0;
+        if (infoFanOut <= fanOut && infoFanIn <= fanIn) {
+          return green;
+        } else {
+          return red;
+        }
+      });
+
+    const triangle = d3.symbol().type(d3.symbolTriangle).size(350)();
+    node
+      .filter((d) => {
+        if (d.id.endsWith(".ts")) {
+          return false;
+        } else if (d.id.includes(".")) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+      .append("path")
+      .attr("fill", green)
+      .attr("class", "triangle")
+      .attr("d", triangle);
 
     node.append("title").text((d) => {
       const infoFanIn = info.fanIn[d.id] || 0;
